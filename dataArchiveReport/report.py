@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from netCDF4 import Dataset
-import os.path
+from netCDF4 import Dataset, num2date
+import os
 
 class report:
     def __init__(self):
         self.files = []
         self.reports = {}
         self.errors = {}
+        self.metas = ["filename", "dim", "var", "units", "start_date", "end_date", "max_lat", "min_lat", "max_lon", "min_lon"]
+        self.stats = []
         return None
 
     def addReports(self,files):
@@ -27,24 +29,64 @@ class report:
 
     def reportarize(self,f):
         new_report = {}
+        fid = Dataset(f)
+        new_report["filename"] = f
+        new_report["dim"] = [x for x in fid.dimensions]
+        new_report["var"] = [x for x in fid.variables if x not in new_report["dim"]]
+        new_report["units"] = [fid.variables[x].units for x in new_report["var"]]
+        if "time" in new_report["dim"]:
+            new_report["start_date"] = fid.variables["time"][0]
+            new_report["end_date"] = fid.variables["time"][-1]
+            if "since" in fid.variables["time"].units:
+                new_report["start_date"] = str(num2date(new_report["start_date"],fid.variables["time"].units,calendar="standard"))
+                new_report["end_date"] = str(num2date(new_report["end_date"],fid.variables["time"].units,calendar="standard"))
+        if "lat" in new_report["dim"]:
+            new_report["max_lat"] = str(max(fid.variables["lat"]))
+            new_report["min_lat"] = str(min(fid.variables["lat"]))
+        if "lon" in new_report["dim"]:
+            new_report["max_lon"] = str(max(fid.variables["lon"]))
+            new_report["min_lon"] = str(min(fid.variables["lon"]))
+        # Statistics Section
+        for v in new_report["var"]:
+            data = fid.variables[v][:]
+        fid.close()
         return new_report
 
-    def removeReport(self,filename):
-        self.files.pop(self.files.index(filename))
-        del self.reports[filename]
+    def removeReports(self,files):
+        if not isinstance(files,list):
+            files = [files]
+        for f in files:
+            if f in self.files:
+                self.files.pop(self.files.index(f))
+                del self.reports[f]
         return None
 
-    def testPrint(self):
-        for f in self.files:
-            nc_fid = Dataset(f)
-            print(nc_fid.ncattrs())
-            nc_dims = [dim for dim in nc_fid.dimensions]
-            print(nc_dims)
-            nc_vars = [var for var in nc_fid.variables]
-            print(nc_vars)
-            lats = nc_fid.variables['lat'][:]
-            print(lats)
-            air = nc_fid.variables['air'][:]
-            print(air)
-            nc_fid.close()
+    def csv(self,keys):
+        report_str = ''
+        report_str += ",".join(keys) + "\n"
+        for filename in self.reports:
+            line = []
+            for key in keys:
+                if key in self.reports[filename]:
+                    if isinstance(self.reports[filename][key],list):
+                        line.append('"['+','.join(str(x) for x in self.reports[filename][key])+']"')
+                    else:
+                        line.append(self.reports[filename][key])
+            report_str += ",".join(line) + "\n"
+        return report_str
+
+    def printReport(self, statistics=False, fmt="csv", save_to_file=False):
+        keys = self.metas
+        if statistics:
+            keys = keys + self.stats
+        ff = eval('self.'+fmt)
+        report_str = ff(keys)
+        if save_to_file:
+            if not os.path.isdir("data_report"):
+                os.makedirs("data_report")
+                fid = open("data_report/report.csv","w")
+                fid.write(report_str)
+                fid.close()
+        else:
+            print(report_str)
         return None
