@@ -3,6 +3,7 @@
 
 from netCDF4 import Dataset, num2date
 import os
+import numpy
 
 class report:
     def __init__(self):
@@ -10,7 +11,7 @@ class report:
         self.reports = {}
         self.errors = {}
         self.metas = ["filename", "dim", "var", "units", "start_date", "end_date", "max_lat", "min_lat", "max_lon", "min_lon"]
-        self.stats = []
+        self.stats = ["var_max", "var_min", "var_mean"]
         return None
 
     def addReports(self,files):
@@ -47,8 +48,17 @@ class report:
             new_report["max_lon"] = str(max(fid.variables["lon"]))
             new_report["min_lon"] = str(min(fid.variables["lon"]))
         # Statistics Section
+        var_max = []
+        var_min = []
+        var_mean = []
         for v in new_report["var"]:
             data = fid.variables[v][:]
+            var_max.append(numpy.amax(data))
+            var_min.append(numpy.amin(data))
+            var_mean.append(numpy.nanmean(data))
+        new_report["var_max"] = var_max
+        new_report["var_min"] = var_min
+        new_report["var_mean"] = var_mean
         fid.close()
         return new_report
 
@@ -69,9 +79,12 @@ class report:
             for key in keys:
                 if key in self.reports[filename]:
                     if isinstance(self.reports[filename][key],list):
-                        line.append('"['+','.join(str(x) for x in self.reports[filename][key])+']"')
+                        if len(self.reports[filename][key]) == 1:
+                            line.append(str(self.reports[filename][key][0]))
+                        else:
+                            line.append('"['+','.join(str(x) for x in self.reports[filename][key])+']"')
                     else:
-                        line.append(self.reports[filename][key])
+                        line.append(str(self.reports[filename][key]))
             report_str += ",".join(line) + "\n"
         return report_str
 

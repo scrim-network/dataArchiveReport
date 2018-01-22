@@ -38,6 +38,6 @@ class BasicsTestCase(unittest.TestCase):
         self.assertIsInstance(new_report,dict)
 
     def test_printReport(self):
-        self.report.printReport()
+        self.report.printReport(statistics=True)
         self.report.printReport(save_to_file=True)
         self.assertTrue(os.path.isfile("data_report/report.csv"))
