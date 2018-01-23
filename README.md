@@ -9,7 +9,7 @@ Returns information about NetCDF files in a data archive.
 pip install git+git://github.com/scrim-network/dataArchiveReport.git#egg=dataArchiveReport
 ```
 
-### Manual
+### Manual Installation
 
 Just download and unpack the repository. Make sure the module folder is in your path. Then, install the dependencies:
 
