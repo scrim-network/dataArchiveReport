@@ -3,6 +3,7 @@
 
 from netCDF4 import Dataset, num2date
 import os
+import sys
 import numpy
 
 class report:
@@ -89,6 +90,9 @@ class report:
         return report_str
 
     def printReport(self, statistics=False, fmt="csv", save_to_file=False):
+        if len(self.reports) == 0:
+            print('No reports to print', file=sys.stderr)
+            return False
         keys = self.metas
         if statistics:
             keys = keys + self.stats
@@ -102,4 +106,4 @@ class report:
                 fid.close()
         else:
             print(report_str)
-        return None
+        return True

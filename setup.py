@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='dataArchiveReport',
-    version='0.4.0',
+    version='0.5.0',
     packages=find_packages(exclude=['tests*']),
     license='MIT',
     description='Returns information about NetCDF files in a data archive.',

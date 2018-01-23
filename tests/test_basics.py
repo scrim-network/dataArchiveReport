@@ -38,6 +38,8 @@ class BasicsTestCase(unittest.TestCase):
         self.assertIsInstance(new_report,dict)
 
     def test_printReport(self):
-        self.report.printReport(statistics=True)
-        self.report.printReport(save_to_file=True)
+        self.assertTrue(self.report.printReport(statistics=True))
+        self.assertTrue(self.report.printReport(save_to_file=True))
         self.assertTrue(os.path.isfile("data_report/report.csv"))
+        self.report.removeReports("tests/air.sig995.2012.nc")
+        self.assertFalse(self.report.printReport())
