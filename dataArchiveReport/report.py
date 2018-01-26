@@ -12,7 +12,7 @@ class report:
         self.files = []
         self.reports = {}
         self.errors = {}
-        self.metas = ["filename", "dim", "var", "units", "start_date", "end_date", "max_lat", "min_lat", "max_lon", "min_lon"]
+        self.metas = ["filename", "dim", "var", "units", "start_date", "end_date", "n_timesteps", "max_lat", "min_lat", "max_lon", "min_lon"]
         self.stats = ["var_max", "var_min", "var_mean"]
         return None
 
@@ -24,10 +24,14 @@ class report:
         self.files = list(set(self.files + files))
         for f in files:
             if os.path.isfile(f):
-                self.reports[f] = self.reportarize(f)
+                try:
+                    self.reports[f] = self.reportarize(f)
+                except:
+                    self.files.pop(self.files.index(f))
+                    self.errors[f] = 'Problem creating report.'
             else:
                 self.files.pop(self.files.index(f))
-                self.errors[f] = f+' is not a file or is a directory.'
+                self.errors[f] = 'Not a file or is a directory.'
         return True
 
     def reportarize(self,f):
@@ -36,10 +40,11 @@ class report:
         new_report["filename"] = f
         new_report["dim"] = [x for x in fid.dimensions]
         new_report["var"] = [x for x in fid.variables if x not in new_report["dim"]]
-        new_report["units"] = [fid.variables[x].units for x in new_report["var"]]
+        new_report["units"] = [fid.variables[x].units for x in new_report["var"] if hasattr(fid.variables[x],'units')]
         if "time" in new_report["dim"]:
             new_report["start_date"] = fid.variables["time"][0]
             new_report["end_date"] = fid.variables["time"][-1]
+            new_report["n_timesteps"] = len(fid.variables["time"][:])
             if "since" in fid.variables["time"].units:
                 new_report["start_date"] = str(num2date(new_report["start_date"],fid.variables["time"].units,calendar="standard"))
                 new_report["end_date"] = str(num2date(new_report["end_date"],fid.variables["time"].units,calendar="standard"))
