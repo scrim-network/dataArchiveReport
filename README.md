@@ -47,3 +47,7 @@ my_report.addReports(new_files)
 remove_files = ["new_file1.nc", "file2.nc"]
 my_report.removeReports(remove_files)
 ```
+
+### Resources
+
+[netCDF4 module](http://unidata.github.io/netcdf4-python/)  
